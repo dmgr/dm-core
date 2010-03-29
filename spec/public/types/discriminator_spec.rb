@@ -3,12 +3,18 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'spec_hel
 describe DataMapper::Types::Discriminator do
   before :all do
     module ::Blog
+      class NewDiscriminator < DataMapper::Types::Discriminator
+        primitive Class
+        default   lambda { |resource, property| resource.model }
+        required  true
+      end
+
       class Article
         include DataMapper::Resource
 
         property :id,    Serial
         property :title, String, :required => true
-        property :type,  Discriminator
+        property :type,  NewDiscriminator
       end
 
       class Announcement < Article; end

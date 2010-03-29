@@ -13,8 +13,6 @@ module DataMapper
         model           = property.model
         property_name   = property.name
 
-        model.default_scope(repository_name).update(property_name => model.descendants)
-
         model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
           extend Chainable
 

@@ -3,18 +3,12 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'spec_hel
 describe DataMapper::Types::Discriminator do
   before :all do
     module ::Blog
-      class NewDiscriminator < DataMapper::Types::Discriminator
-        primitive Class
-        default   lambda { |resource, property| resource.model }
-        required  true
-      end
-
       class Article
         include DataMapper::Resource
 
         property :id,    Serial
         property :title, String, :required => true
-        property :type,  NewDiscriminator
+        property :type,  Discriminator
       end
 
       class Announcement < Article; end
@@ -89,8 +83,8 @@ describe DataMapper::Types::Discriminator do
   end
 
   describe 'Model#default_scope' do
-    it 'should set the default scope for the grandparent model' do
-      @article_model.default_scope[:type].should equal(@article_model.descendants)
+    it "shouldn't set the default scope for root model if you want all descendants anyway" do
+      @article_model.default_scope[:type].should be_nil
     end
 
     it 'should set the default scope for the parent model' do

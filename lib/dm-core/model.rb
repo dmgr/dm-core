@@ -532,7 +532,6 @@ module DataMapper
       repository      = query.repository
       repository_name = repository.name
       fields          = query.fields
-      discriminator   = properties(repository_name).discriminator
       no_reload       = !query.reload?
 
       field_map = fields.map { |property| [ property, property.field ] }.to_hash
@@ -548,7 +547,7 @@ module DataMapper
             record = record.dup
             field_map.each { |property, field| record[property] = record.delete(field) if record.key?(field) }
 
-            model     = discriminator && discriminator.typecast(record[discriminator]) || self
+            model = determine(record)
             model_key = model.key(repository_name)
 
             resource = if model_key.valid?(key_values = record.values_at(*model_key))
@@ -603,6 +602,12 @@ module DataMapper
 
         resource
       end
+    end
+    
+    # @api semipublic
+    def determine(record)
+      discriminator = properties(repository_name).discriminator
+      discriminator && discriminator.typecast(record[discriminator]) || self
     end
 
     # @api semipublic

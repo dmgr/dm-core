@@ -454,8 +454,8 @@ module DataMapper
     chainable do
       def new(*args, &block)
         if args.size == 1 && args.first.kind_of?(Hash)
-          model = discrimination(to_record(args.first))
-          return model.new(*args, &block) if model && !model.equal?(self)
+          model = discrimination(record = to_record(args.first))
+          return model.new(record, &block) if model && !model.equal?(self)
         end
         
         assert_valid
@@ -607,13 +607,16 @@ module DataMapper
     # Maps supplied data hash to record
     # @api semipublic
     def to_record(data)
-      data.dup.tap do |record|
-        properties.each do |property|
-          if record.key?(field = property.field) || record.key?(field = field.to_sym)
-            record[property] = record.delete(field)
-          end
+      record = nil
+      
+      properties.each do |property|
+        if data.key?(field = property.field) || data.key?(field = field.to_sym)
+          record ||= data.dup
+          record[property] = record.delete(field)
         end
       end
+      
+      record || data
     end
 
     # @api semipublic

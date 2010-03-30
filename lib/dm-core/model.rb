@@ -453,13 +453,12 @@ module DataMapper
     # @api public
     chainable do
       def new(*args, &block)
-        assert_valid
-
         if args.size == 1 && args.first.kind_of?(Hash)
-          model = determine(to_record(args.first))
-          return model.new(*args, &block) unless model.equal?(self)
-        end
-
+          model = discriminator.call(to_record(args.first))
+          return model.new(*args, &block) if model && !model.equal?(self)
+        end if discriminator
+        
+        assert_valid
         super
       end
     end
@@ -548,7 +547,7 @@ module DataMapper
         case record
           when Hash
             # remap fields to use the Property object
-            model = determine(to_record(record))
+            model = discriminator && discriminator.call(to_record(record)) || self
             model_key = model.key(repository_name)
 
             resource = if model_key.valid?(key_values = record.values_at(*model_key))
@@ -604,13 +603,7 @@ module DataMapper
         resource
       end
     end
-    
-    # @api semipublic
-    def determine(record)
-      discriminator = properties(repository_name).discriminator
-      discriminator && discriminator.typecast(record[discriminator]) || self
-    end
-    
+
     # Maps supplied data hash to record
     # @api semipublic
     def to_record(data)
@@ -625,6 +618,11 @@ module DataMapper
 
     # @api semipublic
     attr_reader :base_model
+    attr_writer :discriminator
+    
+    def discriminator
+      @discriminator ? @discriminator : base_model && base_model != self ? base_model.discriminator : nil
+    end
 
     # @api semipublic
     def default_repository_name

@@ -12,8 +12,12 @@ module DataMapper
         repository_name = property.repository_name
         model           = property.model
         property_name   = property.name
+        
+        model.discriminator = lambda do |record|
+          record[property]
+        end
 
-        model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+        model.class_eval <<-RUBY, __FILE__, __LINE__+1
           extend Chainable
 
           extendable do

@@ -534,8 +534,6 @@ module DataMapper
       fields          = query.fields
       no_reload       = !query.reload?
 
-      field_map = fields.map { |property| [ property, property.field ] }.to_hash
-
       records.map do |record|
         identity_map = nil
         key_values   = nil
@@ -544,10 +542,7 @@ module DataMapper
         case record
           when Hash
             # remap fields to use the Property object
-            record = record.dup
-            field_map.each { |property, field| record[property] = record.delete(field) if record.key?(field) }
-
-            model = determine(record)
+            model = determine(to_record(record))
             model_key = model.key(repository_name)
 
             resource = if model_key.valid?(key_values = record.values_at(*model_key))
@@ -608,6 +603,18 @@ module DataMapper
     def determine(record)
       discriminator = properties(repository_name).discriminator
       discriminator && discriminator.typecast(record[discriminator]) || self
+    end
+    
+    # Maps supplied data hash to record
+    # @api semipublic
+    def to_record(data)
+      data.dup.tap do |record|
+        properties.each do |property|
+          if record.key?(field = property.field) || record.key?(field = field.to_sym)
+            record[property] = record.delete(field)
+          end
+        end
+      end
     end
 
     # @api semipublic

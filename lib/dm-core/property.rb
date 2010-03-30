@@ -662,24 +662,22 @@ module DataMapper
     #
     # @api semipublic
     def typecast(value)
-      type      = self.type
-      primitive = self.primitive
-
-      return type.typecast(value, self) if type.respond_to?(:typecast)
-      return value if primitive?(value) || value.nil?
-
-      if    primitive == Integer    then typecast_to_integer(value)
-      elsif primitive == String     then typecast_to_string(value)
-      elsif primitive == TrueClass  then typecast_to_boolean(value)
-      elsif primitive == BigDecimal then typecast_to_bigdecimal(value)
-      elsif primitive == Float      then typecast_to_float(value)
-      elsif primitive == DateTime   then typecast_to_datetime(value)
-      elsif primitive == Time       then typecast_to_time(value)
-      elsif primitive == Date       then typecast_to_date(value)
-      elsif primitive == Class      then typecast_to_class(value)
+      if primitive?(value)
+        case primitive
+          when Integer    then typecast_to_integer(value)
+          when String     then typecast_to_string(value)
+          when TrueClass  then typecast_to_boolean(value)
+          when BigDecimal then typecast_to_bigdecimal(value)
+          when Float      then typecast_to_float(value)
+          when DateTime   then typecast_to_datetime(value)
+          when Time       then typecast_to_time(value)
+          when Date       then typecast_to_date(value)
+          when Class      then typecast_to_class(value)
+          else value
+        end
       else
-        value
-      end
+        type.cast(value, self)
+      end unless value.nil?
     end
 
     # @api semipublic

@@ -193,6 +193,10 @@ module DataMapper
     def self.load(value, property)
       value
     end
+    
+    def self.cast(value, property)
+      value
+    end
 
     # A hook to allow types to extend or modify property it's bound to.
     # Implementations are not supposed to modify the state of the type class, and

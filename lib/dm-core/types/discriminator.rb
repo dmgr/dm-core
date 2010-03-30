@@ -43,6 +43,13 @@ module DataMapper
           end
         RUBY
       end
+      
+      def self.cast(value, property)
+        case value
+          when Class then value
+          else property.model.find_const(value.to_s)
+        end
+      end
     end # class Discriminator
   end # module Types
 end # module DataMapper

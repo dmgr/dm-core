@@ -454,6 +454,12 @@ module DataMapper
     chainable do
       def new(*args, &block)
         assert_valid
+
+        if args.size == 1 && args.first.kind_of?(Hash)
+          model = determine(to_record(args.first))
+          return model.new(*args, &block) unless model.equal?(self)
+        end
+
         super
       end
     end

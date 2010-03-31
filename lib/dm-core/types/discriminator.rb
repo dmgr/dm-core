@@ -13,7 +13,9 @@ module DataMapper
         model           = property.model
         property_name   = property.name
         
-        model.instance_variable_set(:@discriminator, property)
+        model.discriminator = lambda do |record|
+          record[property]
+        end
 
         model.class_eval <<-RUBY, __FILE__, __LINE__+1
           extend Chainable
@@ -22,10 +24,6 @@ module DataMapper
             def inherited(model)
               super  # setup self.descendants
               model.default_scope(#{repository_name.inspect}).update(#{property_name.inspect} => model.descendants)
-            end
-            
-            def discrimination(record)
-              record[@discriminator]
             end
           end
         RUBY

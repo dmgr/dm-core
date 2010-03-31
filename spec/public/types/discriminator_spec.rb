@@ -83,8 +83,8 @@ describe DataMapper::Types::Discriminator do
   end
 
   describe 'Model#default_scope' do
-    it 'should set the default scope for the grandparent model' do
-      @article_model.default_scope[:type].should equal(@article_model.descendants)
+    it "shouldn't set the default scope for root model if you want all descendants anyway" do
+      @article_model.default_scope[:type].should be_nil
     end
 
     it 'should set the default scope for the parent model' do
@@ -107,7 +107,9 @@ describe DataMapper::Types::Discriminator do
 
     before :all do
       rescue_if 'TODO: fix YAML serialization/deserialization', @skip do
-        @announcement = @announcement_model.create(:title => 'Announcement')
+        p @article_model.first
+        p @announcement = @announcement_model.create(:title => 'Announcement')
+        p @article_model.first
       end
     end
 

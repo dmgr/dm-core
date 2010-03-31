@@ -395,6 +395,11 @@ module DataMapper
     # @api public
     chainable do
       def new(*args, &block)
+        if args.size == 1 && args.first.kind_of?(Hash)
+          model = discriminator.call(record = to_record(args.first))
+          return model.new(record, &block) if model && !model.equal?(self)
+        end if discriminator
+
         assert_valid
         super
       end
@@ -474,10 +479,7 @@ module DataMapper
       repository      = query.repository
       repository_name = repository.name
       fields          = query.fields
-      discriminator   = properties(repository_name).discriminator
       no_reload       = !query.reload?
-
-      field_map = fields.map { |property| [ property, property.field ] }.to_hash
 
       records.map do |record|
         identity_map = nil
@@ -486,11 +488,10 @@ module DataMapper
 
         case record
           when Hash
-            # remap fields to use the Property object
-            record = record.dup
-            field_map.each { |property, field| record[property] = record.delete(field) if record.key?(field) }
-
-            model     = discriminator && record[discriminator] || self
+            # remap record to use the Property object
+            record = to_record(record)
+            
+            model = discriminator && discriminator.call(record) || self
             model_key = model.key(repository_name)
 
             resource = if model_key.valid?(key_values = record.values_at(*model_key))
@@ -547,8 +548,28 @@ module DataMapper
       end
     end
 
+    # Maps supplied data hash to record
+    # @api semipublic
+    def to_record(data)
+      record = nil
+      
+      properties.each do |property|
+        if data.key?(field = property.field) || data.key?(field = field.to_sym)
+          record ||= data.dup
+          record[property] = record.delete(field)
+        end
+      end
+      
+      record || data
+    end
+
     # @api semipublic
     attr_reader :base_model
+    attr_writer :discriminator
+
+    def discriminator
+      @discriminator ? @discriminator : base_model == self ? nil : base_model.discriminator
+    end
 
     # @api semipublic
     def default_repository_name

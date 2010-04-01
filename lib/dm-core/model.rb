@@ -7,7 +7,7 @@ module DataMapper
         raise 'not implemented'
       end
     
-      def allocate(resource, bag)
+      def postinit(resource, bag)
       end
     end
 
@@ -411,7 +411,7 @@ module DataMapper
 
         assert_valid
         res = super
-        discriminator && discriminator.allocate(self, bag)
+        discriminator && discriminator.postinit(res, bag)
         res
       end
     end
@@ -526,8 +526,6 @@ module DataMapper
 
               property.set!(resource, value)
             end
-            
-            discriminator && discriminator.allocate(resource, bag)
 
           when Resource
             model     = record.model
@@ -558,6 +556,7 @@ module DataMapper
           resource.instance_variable_set(:@_readonly, true)
         end
 
+        discriminator && discriminator.postinit(resource, bag)
         resource
       end
     end

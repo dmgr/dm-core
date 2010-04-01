@@ -2,7 +2,7 @@
 
 module DataMapper
   module Model
-    class Discriminator
+    class DiscriminatorAdapter
       def discriminate(record, bag)
         raise 'not implemented'
       end

@@ -6,6 +6,12 @@ module DataMapper
       primitive Class
       default   lambda { |resource, property| resource.model }
       required  true
+      
+      class Discriminator < Model::DiscriminatorAdapter
+        def discriminate(record, bag)
+          record[property]
+        end
+      end
 
       # @api private
       def self.bind(property)
@@ -13,11 +19,7 @@ module DataMapper
         model           = property.model
         property_name   = property.name
         
-        model.discriminator = DataMapper::Model::Discriminator.new do
-          def discriminate(record, bag)
-            record[property]
-          end
-        end
+        model.discriminator = Discriminator.new
 
         model.class_eval <<-RUBY, __FILE__, __LINE__+1
           extend Chainable

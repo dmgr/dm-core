@@ -13,8 +13,10 @@ module DataMapper
         model           = property.model
         property_name   = property.name
         
-        model.discriminator = lambda do |record|
-          record[property]
+        model.discriminator = DataMapper::Model::Discriminator.new do
+          def discriminate(record, bag)
+            record[property]
+          end
         end
 
         model.class_eval <<-RUBY, __FILE__, __LINE__+1

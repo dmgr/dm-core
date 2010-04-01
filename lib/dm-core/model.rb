@@ -2,6 +2,15 @@
 
 module DataMapper
   module Model
+    class Discriminator
+      def discriminate(record, bag)
+        raise 'not implemented'
+      end
+    
+      def allocate(resource, bag)
+      end
+    end
+
     extend Chainable
 
     # Creates a new Model class with default_storage_name +storage_name+
@@ -396,12 +405,14 @@ module DataMapper
     chainable do
       def new(*args, &block)
         if args.size == 1 && args.first.kind_of?(Hash)
-          model = discriminator.call(record = to_record(args.first))
+          model = discriminator.discriminate(record = to_record(args.first), bag = {})
           return model.new(record, &block) if model && !model.equal?(self)
         end if discriminator
 
         assert_valid
-        super
+        res = super
+        discriminator && discriminator.allocate(self, bag)
+        res
       end
     end
 
@@ -491,7 +502,8 @@ module DataMapper
             # remap record to use the Property object
             record = to_record(record)
             
-            model = discriminator && discriminator.call(record) || self
+            bag = {}
+            model = discriminator && discriminator.discriminate(record, bag) || self
             model_key = model.key(repository_name)
 
             resource = if model_key.valid?(key_values = record.values_at(*model_key))
@@ -514,6 +526,8 @@ module DataMapper
 
               property.set!(resource, value)
             end
+            
+            discriminator && discriminator.allocate(resource, bag)
 
           when Resource
             model     = record.model

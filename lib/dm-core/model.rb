@@ -411,7 +411,7 @@ module DataMapper
 
         assert_valid
         res = super
-        discriminator && discriminator.postinit(res, bag)
+        discriminator && discriminator.postinit(res, bag || {})
         res
       end
     end
